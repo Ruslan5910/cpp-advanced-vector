@@ -122,6 +122,7 @@ class Vector {
             } else {
                 Copy(rhs);
             }
+            size_ = rhs.size_;
         }
         return *this;
     }
@@ -303,14 +304,9 @@ class Vector {
 
 private:
     void Copy(const Vector& rhs) {
-        if (rhs.size_ < size_) {
-            std::copy(rhs.data_.GetAddress(), rhs.data_.GetAddress() + rhs.size_, data_.GetAddress());
-            std::destroy_n(data_.GetAddress() + rhs.size_, size_ - rhs.size_);
-        } else {
-            std::copy(rhs.data_.GetAddress(), rhs.data_.GetAddress() + size_, data_.GetAddress());
-            std::uninitialized_copy_n(rhs.data_.GetAddress() + size_, rhs.size_ - size_, data_.GetAddress() + size_);
-        }
-        size_ = rhs.size_;
+        std::copy(rhs.data_.GetAddress(), rhs.data_ + std::min(rhs.size_, size_), data_.GetAddress());
+        size_ > rhs.size_ ? std::destroy_n(data_ + rhs.size_, size_ - rhs.size_)
+                          : std::uninitialized_copy_n(rhs.data_.GetAddress() + size_, rhs.size_ - size_, data_.GetAddress() + size_);
     }
     RawMemory<T> data_;
     size_t size_ = 0;
